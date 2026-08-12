@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calculadora 3D Uruguay V2</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+:root{
+ --bg:#07100a;--card:#0b160d;--card2:#0e1c11;--ink:#b7ff72;--muted:#6fa34d;
+ --line:#315522;--accent:#8cff3f;--ok:#9dff55;--warn:#e8c95b;--bad:#ff5b4d;
+ --glow:0 0 7px rgba(140,255,63,.45),0 0 22px rgba(140,255,63,.12)
+}
+*{box-sizing:border-box}
+html{background:#050a06}
+body{
+ margin:0;background:
+ radial-gradient(circle at 50% -10%,rgba(110,255,50,.10),transparent 35%),
+ repeating-linear-gradient(0deg,rgba(140,255,63,.018) 0,rgba(140,255,63,.018) 1px,transparent 1px,transparent 4px),
+ var(--bg);color:var(--ink);font-family:"Share Tech Mono",Consolas,monospace;
+ text-shadow:0 0 4px rgba(140,255,63,.25)
+}
+body:after{content:"";pointer-events:none;position:fixed;inset:0;background:linear-gradient(rgba(0,0,0,0) 50%,rgba(0,0,0,.13) 50%);background-size:100% 4px;mix-blend-mode:multiply;opacity:.45;z-index:9999}
+.wrap{max-width:1080px;margin:auto;padding:14px}
+.hero{
+ background:linear-gradient(180deg,#10200f,#08120a);color:var(--ink);padding:22px;
+ border:1px solid var(--accent);border-radius:4px;margin-bottom:14px;box-shadow:var(--glow);
+ position:relative;overflow:hidden
+}
+.hero:before{content:"VAULT-3D // FABRICATION TERMINAL";display:block;font-size:12px;margin-bottom:12px;color:var(--muted);letter-spacing:2px}
+.hero:after{content:"";position:absolute;right:18px;top:18px;width:10px;height:10px;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:blink 1s infinite}
+h1{margin:0 0 4px;font-size:27px;letter-spacing:2px;text-transform:uppercase}h2{font-size:18px;margin:0 0 13px;text-transform:uppercase;letter-spacing:1px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{
+ background:linear-gradient(180deg,rgba(13,29,15,.98),rgba(7,17,9,.98));
+ border:1px solid var(--line);border-radius:3px;padding:17px;margin-bottom:14px;
+ box-shadow:inset 0 0 25px rgba(110,255,50,.025),0 0 12px rgba(0,0,0,.5)
+}
+.card h2:before{content:"> ";color:var(--accent)}
+label{font-size:13px;font-weight:700;display:block;margin:10px 0 5px;color:#92d768}
+input,select,button{font:inherit}input,select{
+ width:100%;padding:11px;border:1px solid var(--line);border-radius:2px;background:#050d07;color:var(--ink);
+ outline:none;box-shadow:inset 0 0 10px rgba(0,0,0,.5)
+}
+input:focus,select:focus{border-color:var(--accent);box-shadow:var(--glow)}
+button{
+ border:1px solid var(--accent);border-radius:2px;padding:11px 14px;font-weight:750;cursor:pointer;
+ background:#10230e;color:var(--accent);box-shadow:var(--glow);text-transform:uppercase;letter-spacing:.5px
+}
+button:hover{background:#183516;filter:brightness(1.2)}button.secondary{border-color:var(--line);background:#0a150c;color:#83bd5e;box-shadow:none}button.danger{border-color:var(--bad);background:#210b09;color:#ff7568}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.drop{border:1px dashed var(--accent);border-radius:2px;padding:24px;text-align:center;cursor:pointer;background:rgba(120,255,60,.025);box-shadow:inset 0 0 20px rgba(120,255,60,.04)}
+.drop.drag{background:rgba(140,255,63,.10);box-shadow:var(--glow)}
+.small{font-size:12px;color:var(--muted)}.notice{padding:11px;border-radius:2px;background:#171505;border:1px solid #665b25;margin-top:10px;font-size:13px;color:var(--warn)}
+.detected{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+.datum{border:1px solid var(--line);border-radius:2px;padding:10px;background:rgba(140,255,63,.018)}
+.datum b{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}.status{font-weight:750}.ok{color:var(--ok);text-shadow:0 0 6px rgba(157,255,85,.6)}.warn{color:var(--warn)}
+.result{background:#07140a;border:1px solid var(--line);border-radius:2px;padding:14px;box-shadow:inset 0 0 20px rgba(100,255,60,.025)}
+.row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed #263e20}.row:last-child{border:0}
+.big{font-size:31px;font-weight:850;color:var(--ok);margin-top:3px;text-shadow:0 0 10px rgba(157,255,85,.7)}
+.saved{display:grid;gap:8px}.saved-item{border:1px solid var(--line);border-radius:2px;padding:11px;background:#08130a}
+@keyframes blink{50%{opacity:.2}}
+@media(max-width:720px){.grid,.detected{grid-template-columns:1fr}.wrap{padding:9px}h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero"><h1>🖨️ Calculadora de impresión 3D</h1><div>V3 · Bambu Studio / 3MF · VAULT-TEC FABRICATION TERMINAL</div></header>
+
+<section class="card">
+<h2>[ 3MF IMPORT TERMINAL ]</h2>
+<div id="drop" class="drop"><strong>Elegir .3mf o arrastrarlo aquí</strong><div class="small">Lectura ZIP nativa del navegador, sin servidor. Compatible con la estructura Metadata/ de Bambu Studio.</div><input id="file" type="file" accept=".3mf" hidden></div>
+<div id="fileInfo" class="small" style="margin-top:10px"></div>
+<div id="detected" class="detected"></div>
+</section>
+
+<div class="grid">
+<section class="card"><h2>[ FILAMENT ]</h2>
+<label>Precio del rollo (USD)</label><input id="rollUsd" type="number" step="0.01" value="29">
+<label>Peso del rollo (g)</label><input id="rollG" type="number" step="1" value="1000">
+<label>Cotización USD → UYU</label><input id="usd" type="number" step="0.01" value="40">
+<label>Filamento utilizado (g)</label><input id="grams" type="number" step="0.1">
+<label>Desperdicio (%)</label><input id="waste" type="number" step="0.1" value="5">
+<label>Material</label><select id="material"><option>PLA</option><option>PETG</option><option>ABS</option><option>ASA</option><option>TPU</option><option>Otro</option></select>
+</section>
+
+<section class="card"><h2>[ POWER ]</h2>
+<label>Precio del kWh (UYU)</label><input id="kwh" type="number" step="0.001" value="6.744">
+<label>Potencia de la impresora (W)</label><input id="watts" type="number" step="1" value="150">
+<label>Horas de impresión</label><input id="hours" type="number" min="0" step="0.01">
+<label>Minutos</label><input id="minutes" type="number" min="0" max="59" step="1" value="0">
+</section>
+
+<section class="card"><h2>[ PRINTER ]</h2>
+<label>Impresora detectada / seleccionada</label><input id="printer" type="text" placeholder="Ej.: Bambu Lab P2S">
+<label>Precio de la impresora (UYU)</label><input id="printerCost" type="number" step="1" value="0">
+<label>Vida útil estimada (horas)</label><input id="life" type="number" step="1" value="10000">
+<label>Mantenimiento por hora (UYU)</label><input id="maintHour" type="number" step="0.01" value="0">
+</section>
+
+<section class="card"><h2>[ LABOR / EXTRAS ]</h2>
+<label>Horas de trabajo manual</label><input id="laborHours" type="number" step="0.1" value="0">
+<label>Precio por hora (UYU)</label><input id="laborRate" type="number" step="1" value="0">
+<label>Otros costos (UYU)</label><input id="other" type="number" step="0.01" value="0">
+<label>Nombre del trabajo</label><input id="job" type="text" placeholder="Ej.: Boy 10 cm">
+</section>
+</div>
+
+<section class="card"><h2>[ SALE PROTOCOL ]</h2>
+<label>Ganancia (%)</label><select id="margin"><option>30</option><option>50</option><option>75</option><option selected>100</option><option>125</option><option>150</option><option>200</option><option value="custom">Personalizado</option></select>
+<input id="customMargin" type="number" step="0.1" placeholder="Porcentaje personalizado" style="display:none;margin-top:8px">
+<label>Redondear precio</label><select id="round"><option value="1">Sin redondear</option><option value="10">Al $10</option><option value="50">Al $50</option><option value="100">Al $100</option><option value="500">Al $500</option><option value="1000">Al $1.000</option></select>
+<div class="actions" style="margin-top:14px"><button onclick="calculate()">🧮 Calcular</button><button class="secondary" onclick="saveJob()">💾 Guardar</button><button class="secondary" onclick="clearForm()">🧹 Limpiar</button></div>
+</section>
+
+<section class="card"><h2>[ COST ANALYSIS ]</h2><div id="result" class="result"><span class="small">Cargá un 3MF o completá los datos manualmente.</span></div></section>
+<section class="card"><h2>[ ARCHIVED JOBS ]</h2><div id="saved" class="saved"></div></section>
+</div>
+
+<script>
+const $=id=>document.getElementById(id), num=id=>Number($(id).value)||0;
+const money=n=>new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU',minimumFractionDigits:2}).format(Number(n)||0);
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+$('margin').onchange=()=>{$('customMargin').style.display=$('margin').value==='custom'?'block':'none'};
+function margin(){return $('margin').value==='custom'?num('customMargin'):num('margin')}
+
+function calcData(){
+ const h=num('hours')+num('minutes')/60, grams=num('grams'), wp=num('waste')/100;
+ const rollUYU=num('rollUsd')*num('usd'), pg=num('rollG')?rollUYU/num('rollG'):0;
+ const filament=grams*pg, waste=filament*wp, kwh=num('watts')/1000*h, electricity=kwh*num('kwh');
+ const dep=num('printerCost')/num('life')*h, maint=num('maintHour')*h, labor=num('laborHours')*num('laborRate'), other=num('other');
+ const total=filament+waste+electricity+dep+maint+labor+other, m=margin(), profit=total*m/100;
+ let sale=total+profit,r=num('round');if(r>1)sale=Math.ceil(sale/r)*r;
+ return {h,grams,filament,waste,electricity,kwh,dep,maint,labor,other,total,m,profit,sale};
+}
+function calculate(){
+ const v=calcData();
+ $('result').innerHTML=`<div class="row"><span>Filamento</span><b>${money(v.filament)}</b></div>
+<div class="row"><span>Desperdicio</span><b>${money(v.waste)}</b></div>
+<div class="row"><span>Electricidad (${v.kwh.toFixed(2)} kWh)</span><b>${money(v.electricity)}</b></div>
+<div class="row"><span>Depreciación</span><b>${money(v.dep)}</b></div>
+<div class="row"><span>Mantenimiento</span><b>${money(v.maint)}</b></div>
+<div class="row"><span>Mano de obra</span><b>${money(v.labor)}</b></div>
+<div class="row"><span>Otros</span><b>${money(v.other)}</b></div>
+<div class="row"><b>COSTO TOTAL</b><b>${money(v.total)}</b></div><hr>
+<div class="row"><span>Ganancia (${v.m}%)</span><b>${money(v.profit)}</b></div>
+<div class="small">PRECIO FINAL</div><div class="big">${money(v.sale)}</div>`;
+ return v;
+}
+
+function state(){let o={};document.querySelectorAll('input,select').forEach(e=>o[e.id]=e.value);return o}
+function apply(o){Object.entries(o).forEach(([k,v])=>{if($(k))$(k).value=v});$('margin').dispatchEvent(new Event('change'));calculate()}
+function saveJob(){const v=calculate(),list=JSON.parse(localStorage.getItem('3dJobsV2')||'[]'),name=$('job').value.trim()||$('fileInfo').dataset.name||'Trabajo sin nombre';list.unshift({id:Date.now(),name,date:new Date().toLocaleString('es-UY'),state:state(),result:v});localStorage.setItem('3dJobsV2',JSON.stringify(list));renderSaved()}
+function renderSaved(){const list=JSON.parse(localStorage.getItem('3dJobsV2')||'[]');$('saved').innerHTML=list.length?list.map(x=>`<div class="saved-item"><b>${esc(x.name)}</b><div class="small">${esc(x.date)} · Costo ${money(x.result.total)} · Venta ${money(x.result.sale)}</div><div class="actions" style="margin-top:7px"><button class="secondary" onclick="loadJob(${x.id})">Ver</button><button class="secondary" onclick="duplicateJob(${x.id})">Duplicar</button><button class="danger" onclick="deleteJob(${x.id})">Eliminar</button></div></div>`).join(''):'<span class="small">No hay trabajos guardados.</span>'}
+function loadJob(id){const x=JSON.parse(localStorage.getItem('3dJobsV2')||'[]').find(a=>a.id===id);if(x)apply(x.state)}
+function duplicateJob(id){const list=JSON.parse(localStorage.getItem('3dJobsV2')||'[]'),x=list.find(a=>a.id===id);if(x){const c=JSON.parse(JSON.stringify(x));c.id=Date.now();c.name+=' (copia)';c.date=new Date().toLocaleString('es-UY');list.unshift(c);localStorage.setItem('3dJobsV2',JSON.stringify(list));renderSaved()}}
+function deleteJob(id){if(confirm('¿Eliminar este trabajo?')){localStorage.setItem('3dJobsV2',JSON.stringify(JSON.parse(localStorage.getItem('3dJobsV2')||'[]').filter(x=>x.id!==id)));renderSaved()}}
+function clearForm(){['grams','hours','laborHours','laborRate','other','printerCost'].forEach(id=>$(id).value='');$('minutes').value=0;$('printer').value='';$('job').value='';$('detected').innerHTML='';$('fileInfo').innerHTML='';$('result').innerHTML='<span class="small">Completá los datos y presioná Calcular.</span>'}
+
+const drop=$('drop'),file=$('file');drop.onclick=()=>file.click();
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('drag')};drop.ondragleave=()=>drop.classList.remove('drag');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('drag');if(e.dataTransfer.files[0])read3MF(e.dataTransfer.files[0])};
+file.onchange=()=>{if(file.files[0])read3MF(file.files[0])};
+
+/* -------- LECTOR 3MF NATIVO --------
+   3MF = ZIP. Buscamos el directorio central, leemos entradas y
+   soportamos ZIP almacenado (0) y DEFLATE (8) con DecompressionStream.
+*/
+const td=new TextDecoder('utf-8');
+function u16(a,o){return a[o]|a[o+1]<<8}function u32(a,o){return (a[o]|a[o+1]<<8|a[o+2]<<16|a[o+3]<<24)>>>0}
+async function inflateRaw(bytes){
+ const ds=new DecompressionStream('deflate-raw'),w=ds.writable.getWriter(),r=ds.readable.getReader();
+ w.write(bytes);w.close();let chunks=[],n=0,x;while(!(x=await r.read()).done){chunks.push(x.value);n+=x.value.length}
+ let out=new Uint8Array(n),p=0;for(const c of chunks){out.set(c,p);p+=c.length}return out
+}
+async function readZip(buffer){
+ const a=new Uint8Array(buffer),view=new DataView(buffer),files={},eocd=0x06054b50;
+ let pos=-1;for(let i=a.length-22;i>=Math.max(0,a.length-22-65535);i--){if(u32(a,i)===eocd){pos=i;break}}
+ if(pos<0)throw Error('No se encontró el directorio ZIP');
+ const count=u16(a,pos+10),cdSize=u32(a,pos+12),cdOff=u32(a,pos+16);let p=cdOff;
+ for(let i=0;i<count;i++){
+  if(u32(a,p)!==0x02014b50)throw Error('Entrada ZIP inválida');
+  const method=u16(a,p+10),csize=u32(a,p+20),usize=u32(a,p+24),nl=u16(a,p+28),xl=u16(a,p+30),cl=u16(a,p+32),off=u32(a,p+42);
+  const name=td.decode(a.slice(p+46,p+46+nl));const localNameLen=u16(a,off+26),localExtraLen=u16(a,off+28),start=off+30+localNameLen+localExtraLen;
+  const raw=a.slice(start,start+csize);let data;
+  if(method===0)data=raw;else if(method===8)data=await inflateRaw(raw);else{p+=46+nl+xl+cl;continue}
+  files[name]=data;p+=46+nl+xl+cl;
+ }
+ return files
+}
+function text(files,name){return files[name]?td.decode(files[name]):null}
+function json(files,name){try{return JSON.parse(text(files,name)||'null')}catch{return null}}
+function arrVal(o,k,i=0){const v=o?.[k];return Array.isArray(v)?v[i]??'':v??''}
+function firstNumber(v){const m=String(v??'').match(/-?\d+(?:[.,]\d+)?/);return m?parseFloat(m[0].replace(',','.')):null}
+function fmtTime(sec){if(sec==null||!isFinite(sec))return null;sec=Math.max(0,Math.round(sec));return {h:Math.floor(sec/3600),m:Math.floor(sec%3600/60),s:sec%60}}
+function showDatum(label,value,ok=true){return `<div class="datum"><b>${esc(label)}</b><span class="${ok?'ok':'warn'}">${esc(value||'No disponible')}</span></div>`}
+
+async function read3MF(f){
+ $('fileInfo').dataset.name=f.name;$('fileInfo').innerHTML=`Archivo: <b>${esc(f.name)}</b> · leyendo estructura ZIP...`;
+ try{
+  const files=await readZip(await f.arrayBuffer()),settings=json(files,'Metadata/project_settings.config'),plate=json(files,'Metadata/plate_1.json');
+  if(!settings)throw Error('No se encontró Metadata/project_settings.config');
+  const printer=settings.printer_model||settings.printer_settings_id||'';
+  const profile=arrVal(settings,'default_filament_profile')||arrVal(settings,'filament_profile');
+  const material=arrVal(settings,'filament_type')||'';
+  const vendor=arrVal(settings,'filament_vendor')||'';
+  const density=firstNumber(arrVal(settings,'filament_density'));
+  const colour=arrVal(settings,'filament_colour');
+  const nozzle=firstNumber(arrVal(settings,'nozzle_diameter'));
+  const layer=firstNumber(settings.layer_height);
+  const object=plate?.bbox_objects?.[0];
+  const objectName=object?.name||'';
+  const firstLayer=plate?.first_layer_time;
+  let totalTime=null,weight=null;
+  /* Algunas versiones de Bambu Studio pueden incluir estos datos en JSON/config
+     después del slice. Probamos varias claves conocidas, pero jamás inventamos. */
+  const possibleTime=[settings.print_time,settings.total_print_time,settings.estimated_print_time,plate?.print_time,plate?.total_print_time];
+  for(const x of possibleTime){const n=firstNumber(x);if(n!=null){totalTime=n;break}}
+  const possibleWeight=[settings.filament_used_g,settings.used_filament_g,settings.filament_weight,plate?.filament_used_g,plate?.filament_weight];
+  for(const x of possibleWeight){const n=firstNumber(x);if(n!=null){weight=n;break}}
+  $('printer').value=printer;
+  if(material)$('material').value=['PLA','PETG','ABS','ASA','TPU'].includes(material)?material:'Otro';
+  if(weight!=null)$('grams').value=weight;
+  if(totalTime!=null){const t=fmtTime(totalTime);$('hours').value=t.h;$('minutes').value=t.m}
+  $('job').value=f.name.replace(/\.3mf$/i,'');
+  const objText=object?`${esc(objectName)} · capa ${object.layer_height?.toFixed?object.layer_height.toFixed(2):layer} mm`:'No disponible';
+  $('detected').innerHTML=
+   showDatum('Impresora',printer)+showDatum('Material',material?`${vendor?vendor+' ':''}${material}`:'No disponible',!!material)+
+   showDatum('Perfil',profile||'No disponible',!!profile)+showDatum('Color',colour||'No disponible',!!colour)+
+   showDatum('Densidad',density!=null?density+' g/cm³':'No disponible',density!=null)+showDatum('Boquilla',nozzle!=null?nozzle+' mm':'No disponible',nozzle!=null)+
+   showDatum('Altura de capa',layer!=null?layer+' mm':'No disponible',layer!=null)+showDatum('Objeto',objText,!!object)+
+   showDatum('Filamento',weight!=null?weight+' g':'No disponible',weight!=null)+showDatum('Tiempo',totalTime!=null?`${fmtTime(totalTime).h} h ${fmtTime(totalTime).m} min`:'No disponible',totalTime!=null);
+  $('fileInfo').innerHTML=`Archivo: <b>${esc(f.name)}</b> · <span class="ok">✓ Estructura Bambu Studio reconocida</span>`;
+  if(weight==null||totalTime==null)$('fileInfo').innerHTML+=`<div class="notice">Este 3MF contiene la configuración del proyecto, pero no guarda ${weight==null?'el peso total':''}${weight==null&&totalTime==null?' ni ':''}${totalTime==null?'el tiempo total':''} de impresión en los metadatos disponibles. La calculadora deja esos campos manuales. Esto es correcto: no se inventan datos.</div>`;
+ }catch(e){$('fileInfo').innerHTML=`<span class="warn">⚠️ ${esc(e.message||'No se pudo leer el 3MF')}</span>`}
+}
+renderSaved();
+</script>
+</body>
+</html>
